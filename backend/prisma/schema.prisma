@@ -1,0 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// inisiasi tabel  
+
+model MUser {
+  // 1. Tambahkan @default(uuid()) dan ubah panjang VarChar menjadi 36
+  uidUser    String    @id @default(uuid()) @db.VarChar(36)
+  email      String    @unique @db.VarChar(100)
+  password   String    @db.VarChar(255)
+  role       RoleUser
+  
+  // 2. Foreign key untuk relasi juga disesuaikan ke VarChar(36) agar tipenya sama persis
+  uidAtlet   String?   @unique @db.VarChar(36)
+  uidPelatih String?   @unique @db.VarChar(36)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  
+  // 3. Kolom audit pengubah data juga disesuaikan ukurannya karena akan menyimpan UUID user
+  createdBy  String    @db.VarChar(36)
+  updatedBy  String    @db.VarChar(36)
+  deletedBy  String?   @db.VarChar(36)
+
+  // 4. condition sudah atau belumnya terkirim email
+  hasEmailSent Boolean @default(false)
+  emailSentTime DateTime? 
+
+  // Relations
+  atlet      MAtlet?   @relation("UserAtlet", fields: [uidAtlet], references: [uidAtlet])
+  pelatih    MPelatih? @relation("UserPelatih", fields: [uidPelatih], references: [uidPelatih])
+}
+
+model MAtlet {
+  // Terapkan auto-generate UUID yang sama di sini
+  uidAtlet      String   @id @default(uuid()) @db.VarChar(36)
+  nik           String @unique @db.VarChar(20)
+  idPbsi        String @unique @db.VarChar(20)
+  email         String @unique @db.VarChar(50)
+  namaLengkap   String   @db.VarChar(100)
+  namaAyah      String       @db.VarChar(100)
+  namaIbu       String       @db.VarChar(100)
+  tempatLahir   String       @db.VarChar(100)
+  tanggalLahir  DateTime     @db.Date
+  alamat        String       @db.Text
+  jenisKelamin  JenisKelamin
+  peganganRaket PeganganRaket
+  tinggiBadan   Int
+  beratBadan    Int
+  statusAtlet   StatusAtlet
+  foto          String?       @db.VarChar(255)
+  uidProvinsi   String       @db.VarChar(10)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+  createdBy     String   @db.VarChar(36)
+  updatedBy     String   @db.VarChar(36)
+  deletedBy     String?  @db.VarChar(36)
+
+  user          MUser?   @relation("UserAtlet")
+}
+
+model MPelatih {
+  // Terapkan auto-generate UUID yang sama di sini
+  uidPelatih              String   @id @default(uuid()) @db.VarChar(36)
+  nik                     String   @unique @db.VarChar(20)
+  email                   String   @unique @db.VarChar(50)
+  namaLengkap             String   @db.VarChar(100)
+  jenisKelamin            JenisKelamin
+  tanggalLahir            DateTime @db.Date
+  tahunBergabung          Int
+  pernahMelatihSebelumnya Boolean
+  klubNegaraSebelumnya    String   @db.VarChar(100)
+  mantanAtletNasional     Boolean
+  asalKlubNasional        String   @db.VarChar(100)
+  mantanPelatnas          Boolean
+  tahunPelatnas           Int
+  foto                    String?   @db.VarChar(255)
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  deletedAt               DateTime?
+  createdBy               String   @db.VarChar(36)
+  updatedBy               String   @db.VarChar(36)
+  deletedBy               String?  @db.VarChar(36)
+
+  user                    MUser?   @relation("UserPelatih")
+
+  // relation
+   pelatihSektorList    RPelatihSektor[]       @relation("PelatihRPelatihSektor")
+   pelatihJenisList    RPelatihJenis[]       @relation("PelatihRPelatihJenis")
+}
+
+model MSektor {
+  uidSektor   String   @id @default(uuid()) @db.VarChar(36)
+  namaSektor  String   @db.VarChar(50)
+  kategori KategoriSektor  @default(Teknik)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  createdBy  String   @db.VarChar(36)
+  updatedBy  String   @db.VarChar(36)
+  deletedBy  String?  @db.VarChar(36)
+
+  // relation
+   pelatihSektorList RPelatihSektor[]      @relation("SektorRPelatihSektor")
+}
+
+model RPelatihJenis {
+  uidJenis String @id @default(uuid()) @db.VarChar(36)
+  uidPelatih String  @db.VarChar(36)
+  jenisPelatih JenisPelatih
+
+  // untuk histori pelatih
+  startDate DateTime @default(now())
+  endDate DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  createdBy  String   @db.VarChar(36)
+  updatedBy  String   @db.VarChar(36)
+  deletedBy  String?  @db.VarChar(36)
+
+  pelatih MPelatih @relation("PelatihRPelatihJenis", fields: [uidPelatih], references: [uidPelatih])
+
+  // unique constraint mencegah duplikasi
+   @@unique([uidPelatih, jenisPelatih, deletedAt])
+}
+
+model RPelatihSektor {
+  uidRelasi  String   @id @default(uuid()) @db.VarChar(36)
+  uidPelatih String   @db.VarChar(36)
+  uidSektor  String    @db.VarChar(36)
+
+  // untuk histori sebagai audit trail
+  startDate DateTime @default(now())
+  endDate DateTime?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  createdBy  String   @db.VarChar(36)
+  updatedBy  String   @db.VarChar(36)
+  deletedBy  String?  @db.VarChar(36)
+
+  pelatih MPelatih @relation("PelatihRPelatihSektor", fields: [uidPelatih], references: [uidPelatih])
+  sektor  MSektor  @relation("SektorRPelatihSektor", fields: [uidSektor], references: [uidSektor])
+
+  // unique constraint (mencegah terjadinya duplikasi)
+  @@unique([uidPelatih, uidSektor, deletedAt])
+}
+
+// inisiasi enum
+enum RoleUser {
+  Admin
+  Manajemen
+  Pelatih
+  Atlet
+}
+
+enum JenisPelatih {
+  pelatih_teknik
+  pelatih_fisik
+}
+
+enum KategoriSektor {
+  Fisik
+  Teknik
+}
+
+enum StatusKlub {
+  Induk
+  Afiliasi
+  Mitra
+}
+
+enum JenisKelamin {
+  L
+  P
+}
+
+enum PeganganRaket {
+  Kanan
+  Kiri
+}
+
+enum StatusAtlet {
+  Aktif
+  Cedera
+  Pensiun
+  Pelatnas
+}
