@@ -8,6 +8,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import athleteRoutes from "./modules/athlete/athlete.routes.js";
 import coachRoutes from "./modules/coach/coach.routes.js";
 import userRoutes from "./modules/user-management/user-management.routes.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 dotenv.config();
 global.createError = createError;
@@ -32,6 +33,9 @@ app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/athlete", athleteRoutes);
 app.use("/coach", coachRoutes);
+
+// error handler
+app.use(errorHandler);
 
 // initialize server
 const PORT = process.env.PORT;

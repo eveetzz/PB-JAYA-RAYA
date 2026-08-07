@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env.js";
 import { PERMISSIONS } from "./permissions.js";
-import createError from "http-errors";
+// import createError from "http-errors";
+import { appError } from "../utils/errorHandler.js";
 
 // autentikasi token
 export const authenticate = (req, res, next) => {
@@ -9,9 +10,9 @@ export const authenticate = (req, res, next) => {
     const token = req.cookies?.token;
 
     if (!token) {
-      throw createError(
-        401,
+      throw appError(
         "Token tidak ditemukan. Silakan login terlebih dahulu.",
+        401,
       );
     }
 
@@ -29,13 +30,11 @@ export const authenticate = (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return next(
-        createError(401, "Token sudah expired. Silakan login ulang."),
-      );
+      return next(appError("Token sudah expired. Silakan login ulang.", 401));
     }
 
     if (error.name === "JsonWebTokenError") {
-      return next(createError(401, "Token tidak valid"));
+      return next(appError("Token tidak valid", 401));
     }
     next(error);
   }
@@ -49,15 +48,13 @@ export const authorize = (permissions) => {
 
     if (!checkPermissions) {
       console.error(`[Permission Error] "${permissions}" tidak terdefinisi`);
-      return next(createError(500, "Konfigurasi permission tidak valid"));
+      return next(appError("Konfigurasi permission tidak valid", 500));
     }
 
     // cek role
     if (checkPermissions.role) {
       if (!checkPermissions.role.includes(user.role)) {
-        return next(
-          createError(403, "Hak akses tidak tersedia untuk role ini"),
-        );
+        return next(appError("Hak akses tidak tersedia untuk role ini", 403));
       }
     }
 
@@ -72,9 +69,7 @@ export const authorize = (permissions) => {
       const hasAccess = requiredRole.some((role) => userRole.includes(role));
 
       if (!hasAccess) {
-        return next(
-          createError(403, "Hak akses tidak tersedia untuk role ini"),
-        );
+        return next(appError("Hak akses tidak tersedia untuk role ini", 403));
       }
     }
     next();

@@ -59,6 +59,15 @@ export const findByUid = async (id) => {
   return checkUser;
 };
 
+export const updateDataAthlete = async (id, user, updatedData) => {
+  const updatedAthlete = await prisma.mAtlet.update({
+    where: { uidAtlet: id },
+    data: { ...updatedData, updatedAt: new Date(), updatedBy: user },
+  });
+
+  return updatedAthlete;
+};
+
 export const softDeleteUser = async (id, userUid) => {
   const deleteUser = await prisma.mAtlet.update({
     where: {
