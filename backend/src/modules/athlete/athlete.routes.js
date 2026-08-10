@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addAthleteController,
+  assignSektorController,
   deleteAthleteController,
   editAthleteController,
   fetchAthletesController,
@@ -20,6 +21,12 @@ router.post(
   uploadMiddleware,
   validate(createAtletSchema),
   addAthleteController,
+);
+
+router.put(
+  "/:id/assign-sektor",
+  protect("admin:athlete:manage"),
+  assignSektorController,
 );
 
 router.patch(

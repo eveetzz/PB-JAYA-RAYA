@@ -27,6 +27,45 @@ export const createAthlete = async (data, userUid, optimizedImgUrl) => {
   return createData;
 };
 
+export const assignSektor = async (id, sektorList, userUid) => {
+  const results = await prisma.$transaction(async (r) => {
+    // ==========================================
+    // FASE 1: TUTUP (Close)
+    // Menutup semua sektor yang saat ini "Aktif" (endDate = null)
+    // ==========================================
+    await r.rAtletSektor.updateMany({
+      where: {
+        uidAtlet: id,
+        endDate: null,
+        deletedAt: null,
+      },
+      data: {
+        endDate: new Date(),
+        updatedBy: userUid,
+      },
+    });
+    // ==========================================
+    // FASE 2: TUMPUK (Stack)
+    // Membuat record baru untuk sektor yang diminta frontend
+    // ==========================================
+    if (sektorList.length > 0) {
+      await r.rAtletSektor.createMany({
+        data: sektorList.map((item) => ({
+          uidAtlet: id,
+          uidSektor: item.uidSektor,
+          statusSektor: item.statusSektor,
+          startDate: new Date(),
+          endDate: null,
+          createdBy: userUid,
+          updatedBy: userUid,
+        })),
+      });
+    }
+  });
+
+  return results;
+};
+
 export const findByNik = async (nik) => {
   const findData = await prisma.mAtlet.findUnique({
     where: {

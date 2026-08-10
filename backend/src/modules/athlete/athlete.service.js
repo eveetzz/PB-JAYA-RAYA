@@ -1,6 +1,7 @@
 import { getOptimizedUrl, uploadToCloudinary } from "../../utils/cloudinary.js";
 import { appError } from "../../utils/errorHandler.js";
 import {
+  assignSektor,
   createAthlete,
   findByNik,
   findByUid,
@@ -44,6 +45,16 @@ export const editDataAthlete = async (id, user, data) => {
   const updatedData = await updateDataAthlete(id, user, data);
 
   return updatedData;
+};
+
+export const assignSektorAthlete = async (id, sektorList, userUid) => {
+  if (!Array.isArray(sektorList)) {
+    throw appError("Format data harus berupa array", 400);
+  }
+
+  const result = await assignSektor(id, sektorList, userUid);
+
+  return result;
 };
 
 export const softDeleteAthlete = async (id, userUid) => {

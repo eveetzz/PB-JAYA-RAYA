@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addAthlete,
+  assignSektorAthlete,
   editDataAthlete,
   fetchDataAthlete,
   softDeleteAthlete,
@@ -61,6 +62,29 @@ export const editAthleteController = async (req, res, next) => {
       res,
       result,
       "Data berhasil diperbarui",
+      HTTP_STATUS.OK,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignSektorController = async (req, res, next) => {
+  try {
+    const uidAtlet = req.params.id;
+    const { sektorList } = req.body; //list array sektor dari body
+    const userUid = req.user.uidUser;
+
+    if (!sektorList || !Array.isArray(sektorList)) {
+      throw appError("Harus berisi array", 400);
+    }
+
+    const result = await assignSektorAthlete(uidAtlet, sektorList, userUid);
+
+    return successResponse(
+      res,
+      result,
+      "Berhasil menambahkan sektor",
       HTTP_STATUS.OK,
     );
   } catch (error) {
