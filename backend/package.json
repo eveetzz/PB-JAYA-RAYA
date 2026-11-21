@@ -30,6 +30,7 @@
     "resend": "^6.18.0"
   },
   "devDependencies": {
+    "@prisma/prisma7": "^7.10.1",
     "nodemon": "^3.1.14",
     "prisma": "^7.8.0"
   }
