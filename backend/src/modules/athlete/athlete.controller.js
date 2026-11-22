@@ -1,4 +1,3 @@
-import express from "express";
 import {
   addAthlete,
   assignSektorAthlete,
@@ -6,23 +5,17 @@ import {
   fetchDataAthlete,
   softDeleteAthlete,
 } from "./athlete.service.js";
-import { authenticate, authorize } from "../../middlewares/auth.middleware.js";
-import { uploadMiddleware } from "../../utils/cloudinary.js";
-import { getAthletes } from "./athlete.repository.js";
 import { appError } from "../../utils/errorHandler.js";
 import { successResponse } from "../../utils/errorResponse.js";
 import { HTTP_STATUS } from "../../templates/http.template.js";
 
-const router = express.Router();
-
 export const addAthleteController = async (req, res, next) => {
   try {
     const data = req.body;
-    const getFile = req.file.buffer;
-
+    const files = req.files || {};
     const userUid = req.user.uidUser;
 
-    const result = await addAthlete(data, userUid, getFile);
+    const result = await addAthlete(data, userUid, files);
 
     return successResponse(
       res,
@@ -55,8 +48,9 @@ export const editAthleteController = async (req, res, next) => {
     const { id } = req.params;
     const userUid = req.user.uidUser;
     const updatedData = req.body;
+    const files = req.files || {};
 
-    const result = await editDataAthlete(id, userUid, updatedData);
+    const result = await editDataAthlete(id, userUid, updatedData, files);
 
     return successResponse(
       res,
@@ -72,7 +66,7 @@ export const editAthleteController = async (req, res, next) => {
 export const assignSektorController = async (req, res, next) => {
   try {
     const uidAtlet = req.params.id;
-    const { sektorList } = req.body; //list array sektor dari body
+    const { sektorList } = req.body;
     const userUid = req.user.uidUser;
 
     if (!sektorList || !Array.isArray(sektorList)) {
@@ -109,5 +103,3 @@ export const deleteAthleteController = async (req, res, next) => {
     next(error);
   }
 };
-
-export default router;

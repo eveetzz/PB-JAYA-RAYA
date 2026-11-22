@@ -1,85 +1,107 @@
 import { prisma } from "../../config/db.js";
 
-export const createCoach = async (data, userUid, img, rolePelatih) => {
+export const createCoach = async (data, userUid, filePaths, rolePelatih, sektorList) => {
   const results = await prisma.$transaction(async (r) => {
     const addCoachData = await r.mPelatih.create({
       data: {
         nik: data.nik,
-        email: data.email,
         namaLengkap: data.namaLengkap,
-        tanggalLahir: new Date(data.tanggalLahir),
-        tahunBergabung: parseInt(data.tahunBergabung),
-        pernahMelatihSebelumnya: Boolean(data.pernahMelatihSebelumnya), // Pastikan bertipe Boolean (true/false)
-        klubNegaraSebelumnya: data.klubNegaraSebelumnya,
-        mantanAtletNasional: Boolean(data.mantanAtletNasional),
-        asalKlubNasional: data.asalKlubNasional,
         jenisKelamin: data.jenisKelamin,
-        mantanPelatnas: Boolean(data.mantanPelatnas),
-        tahunPelatnas: data.tahunPelatnas ? parseInt(data.tahunPelatnas) : null,
-        foto: img,
+        tanggalLahir: new Date(data.tanggalLahir),
+        tahunBergabung: parseInt(data.tahunBergabung) || new Date().getFullYear(),
+        kewarganegaraan: data.kewarganegaraan || "Indonesia",
+        pernahMelatihSebelumnya: data.pernahMelatihSebelumnya === "true" || data.pernahMelatihSebelumnya === true,
+        klubNegaraSebelumnya: data.klubNegaraSebelumnya || null,
+        statusPelatih: data.statusPelatih || "Aktif",
+        foto: filePaths.foto,
+        fileSertifikasiKota: filePaths.fileSertifikasiKota,
+        fileSertifikasiProvinsi: filePaths.fileSertifikasiProvinsi,
+        fileSertifikasiNasional: filePaths.fileSertifikasiNasional,
+        fileSertifikasiBwf1: filePaths.fileSertifikasiBwf1,
+        fileSertifikasiBwf2: filePaths.fileSertifikasiBwf2,
+        fileSertifikasiSarjanaOlahraga: filePaths.fileSertifikasiSarjanaOlahraga,
+        fileSertifikasiMasterOlahraga: filePaths.fileSertifikasiMasterOlahraga,
         createdBy: userUid,
         updatedBy: userUid,
       },
     });
 
-    await r.rPelatihJenis.createMany({
-      data: rolePelatih.map((jenis) => ({
-        uidPelatih: addCoachData.uidPelatih,
-        jenisPelatih: jenis,
-        startDate: new Date(),
-        createdBy: userUid,
-        updatedBy: userUid,
-      })),
-    });
+    if (rolePelatih.length > 0) {
+      await r.rPelatihJenis.createMany({
+        data: rolePelatih.map((jenis) => ({
+          uidPelatih: addCoachData.uidPelatih,
+          jenisPelatih: jenis,
+          startDate: new Date(),
+          createdBy: userUid,
+          updatedBy: userUid,
+        })),
+      });
+    }
 
-    await r.rPelatihSektor.createMany({
-      data: data.uidSektor.map((uidSektor) => ({
-        uidPelatih: addCoachData.uidPelatih,
-        uidSektor: uidSektor,
-        startDate: new Date(),
-        createdBy: userUid,
-        updatedBy: userUid,
-      })),
-    });
+    if (sektorList.length > 0) {
+      await r.rPelatihSektor.createMany({
+        data: sektorList.map((uidSektor) => ({
+          uidPelatih: addCoachData.uidPelatih,
+          uidSektor: uidSektor,
+          startDate: new Date(),
+          createdBy: userUid,
+          updatedBy: userUid,
+        })),
+      });
+    }
+
+    return addCoachData;
   });
 
   return results;
 };
 
 export const findByNik = async (nik) => {
-  const findData = await prisma.mPelatih.findUnique({
+  return await prisma.mPelatih.findFirst({
     where: {
       nik: nik,
+      deletedAt: null,
     },
   });
-
-  return findData;
 };
 
 export const getCoaches = async () => {
-  const data = await prisma.mPelatih.findMany({
+  return await prisma.mPelatih.findMany({
     where: {
       deletedAt: null,
     },
   });
-
-  return data;
 };
 
-export const softDeleteCoach = async (id, userUid) => {
-  const deleteCoach = prisma.mPelatih.update({
-    where: {
-      uidPelatih: id,
-    },
-    data: {
-      deletedAt: new Date(),
-      deletedBy: userUid,
-    },
+export const softDeleteCoachRepo = async (id, userUid) => {
+  return await prisma.$transaction(async (r) => {
+    const coach = await r.mPelatih.update({
+      where: {
+        uidPelatih: id,
+      },
+      data: {
+        statusPelatih: "Nonaktif",
+        deletedAt: new Date(),
+        deletedBy: userUid,
+      },
+    });
+
+    await r.mUser.updateMany({
+      where: { uidPelatih: id },
+      data: {
+        statusAkun: "Nonaktif",
+        deletedAt: new Date(),
+        deletedBy: userUid,
+      },
+    });
+
+    return coach;
   });
-  return deleteCoach;
 };
 
 export const setJenisFromSektor = async (uidSektor) => {
+  if (!uidSektor || uidSektor.length === 0) return [];
+
   const sektors = await prisma.mSektor.findMany({
     where: {
       uidSektor: { in: uidSektor },
@@ -92,13 +114,5 @@ export const setJenisFromSektor = async (uidSektor) => {
 
   const kategori = [...new Set(sektors.map((sektor) => sektor.kategori))];
 
-  const jenisPelatih = kategori.map((kategori) => {
-    if (kategori === "Fisik") {
-      return "pelatih_fisik";
-    } else {
-      return "pelatih_teknik";
-    }
-  });
-
-  return jenisPelatih;
+  return kategori.map((k) => (k === "Fisik" ? "pelatih_fisik" : "pelatih_teknik"));
 };

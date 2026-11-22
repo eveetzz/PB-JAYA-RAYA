@@ -2,16 +2,16 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
 import { connectDB, disconnectDB } from "./config/db.js";
-import createError from "http-errors";
 import authRoutes from "./modules/auth/auth.routes.js";
 import athleteRoutes from "./modules/athlete/athlete.routes.js";
 import coachRoutes from "./modules/coach/coach.routes.js";
+import officialRoutes from "./modules/official/official.routes.js";
 import userRoutes from "./modules/user-management/user-management.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 dotenv.config();
-global.createError = createError;
 
 const app = express();
 
@@ -26,6 +26,9 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
+// static files for local uploads
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 connectDB();
 
 // routes
@@ -33,6 +36,7 @@ app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/athlete", athleteRoutes);
 app.use("/coach", coachRoutes);
+app.use("/official", officialRoutes);
 
 // error handler
 app.use(errorHandler);

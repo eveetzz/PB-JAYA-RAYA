@@ -1,32 +1,30 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import createError from "http-errors";
 import { findByEmailUser, findJenisPelatih } from "./auth.repository.js";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../../config/env.js";
+import { appError } from "../../utils/errorHandler.js";
 
 export const login = async (data) => {
   const user = await findByEmailUser(data.email);
 
   if (!user) {
-    throw createError(401, "Email atau Password salah");
+    throw appError("Email atau Password salah", 401);
+  }
+
+  if (user.statusAkun === "Nonaktif" || user.deletedAt) {
+    throw appError("Akun telah dinonaktifkan", 403);
   }
 
   const validatePassword = await bcrypt.compare(data.password, user.password);
 
   if (!validatePassword) {
-    throw createError(401, "Username atau Password salah");
+    throw appError("Email atau Password salah", 401);
   }
 
-  if (user.deletedAt) {
-    throw createError(403, "Akun telah dinonaktifkan");
-  }
-
-  // untuk mengambil jenis pelatih dan stored ke jwt
   let permissions = {};
 
   if (user.role === "Pelatih" && user.uidPelatih) {
     const checkJenisPelatih = await findJenisPelatih(user);
-
     permissions = {
       jenis: checkJenisPelatih.map((item) => item.jenisPelatih),
     };
@@ -34,10 +32,24 @@ export const login = async (data) => {
 
   const token = generateToken(user, permissions);
 
-  return { token, user };
+  return {
+    token,
+    user: {
+      uidUser: user.uidUser,
+      email: user.email,
+      role: user.role,
+      statusAkun: user.statusAkun,
+      mustChangePassword: user.mustChangePassword,
+      uidAtlet: user.uidAtlet,
+      uidPelatih: user.uidPelatih,
+      uidOfficial: user.uidOfficial,
+      atlet: user.atlet,
+      pelatih: user.pelatih,
+      official: user.official,
+    },
+  };
 };
 
-// generate token
 const generateToken = (user, permissions) => {
   return jwt.sign(
     {
@@ -46,6 +58,7 @@ const generateToken = (user, permissions) => {
       role: user.role,
       uidAtlet: user.uidAtlet,
       uidPelatih: user.uidPelatih,
+      uidOfficial: user.uidOfficial,
       permissions: permissions,
     },
     JWT_SECRET,

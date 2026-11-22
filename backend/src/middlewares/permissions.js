@@ -1,25 +1,24 @@
 export const PERMISSIONS = {
-  // --- KHUSUS PELATIH FISIK ---
-  "fisik:medical-data:read": { jenis: "pelatih_fisik" },
-  "fisik:conditioning:manage": { jenis: "pelatih_fisik" },
+  // --- COACH SPECIFIC ---
+  "coach:medical-data:read": { jenis: "pelatih_fisik" },
+  "coach:conditioning:manage": { jenis: "pelatih_fisik" },
+  "coach:match-analysis:read": { jenis: "pelatih_teknik" },
+  "coach:tactics:manage": { jenis: "pelatih_teknik" },
 
-  // --- KHUSUS PELATIH TEKNIK ---
-  "teknik:match-analysis:read": { jenis: "pelatih_teknik" },
-  "teknik:tactics:manage": { jenis: "pelatih_teknik" },
+  // --- GENERAL COACH ---
+  "coach:dashboard:view": { jenis: ["pelatih_teknik", "pelatih_fisik"] },
+  "coach:profile:update": { jenis: ["pelatih_teknik", "pelatih_fisik"] },
 
-  // --- BISA KEDUANYA (Rangkap Jabatan Aman) ---
-  "pelatih:dashboard:view": { jenis: ["pelatih_teknik", "pelatih_fisik"] },
-  "pelatih:profile:update": { jenis: ["pelatih_teknik", "pelatih_fisik"] },
-
-  // --- ADMIN/MANAJEMEN ---
-  "admin:pelatih:manage": { role: ["Admin", "Manajemen"] },
-  "admin:pelatih:delete": { role: ["Admin"] },
-
-  // --- USER MANAGEMENT ---
-  "admin:user-management:manage": { role: ["Admin"] },
-  "admin:user-management:assign-roles": { role: ["Admin", "Manajemen"] },
-
-  // --- ATHLETE MANAGEMENT ---
+  // --- ADMIN/MANAGEMENT ---
+  "admin:coach:manage": { role: ["Admin", "Manajemen"] },
+  "admin:coach:delete": { role: ["Admin"] },
+  
   "admin:athlete:manage": { role: ["Admin", "Manajemen"] },
   "admin:athlete:delete": { role: ["Admin"] },
+
+  "admin:official:manage": { role: ["Admin", "Manajemen"] },
+  "admin:official:delete": { role: ["Admin"] },
+
+  "admin:user:manage": { role: ["Admin"] },
+  "admin:user:assign-roles": { role: ["Admin", "Manajemen"] },
 };

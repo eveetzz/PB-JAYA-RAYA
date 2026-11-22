@@ -1,101 +1,70 @@
 import { prisma } from "../../config/db.js";
 
 export const fetchUser = async () => {
-  const getData = await prisma.mUser.findMany({
-    where: {
-      deletedAt: null,
+  return await prisma.mUser.findMany({
+    where: { deletedAt: null },
+    include: {
+      atlet: true,
+      pelatih: true,
+      official: true,
     },
   });
-
-  return getData;
 };
 
 export const createUser = async (data, hashedPassword) => {
-  const addUser = await prisma.mUser.create({
+  return await prisma.mUser.create({
     data: {
       email: data.email,
       password: hashedPassword,
       role: data.role,
+      mustChangePassword: true,
       createdBy: data.createdBy,
       updatedBy: data.createdBy,
     },
   });
-
-  return addUser;
 };
 
-export const createUserByAssignRoles = async (
-  data,
-  hashedPassword,
-  userUid,
-  itemType,
-) => {
-  const userData = {
-    email: data.email,
+export const findByEmail = async (email) => {
+  return await prisma.mUser.findFirst({
+    where: { email, deletedAt: null },
+  });
+};
+
+export const findItemByType = async (uid, itemType) => {
+  if (itemType === "Atlet") {
+    return await prisma.mAtlet.findUnique({ where: { uidAtlet: uid, deletedAt: null } });
+  } else if (itemType === "Pelatih") {
+    return await prisma.mPelatih.findUnique({ where: { uidPelatih: uid, deletedAt: null } });
+  } else if (itemType === "Official") {
+    return await prisma.mOfficial.findUnique({ where: { uidOfficial: uid, deletedAt: null } });
+  }
+  return null;
+};
+
+export const findExistingUserByMasterUid = async (uid, itemType) => {
+  const query = {
+    Atlet: { uidAtlet: uid },
+    Pelatih: { uidPelatih: uid },
+    Official: { uidOfficial: uid },
+  };
+  return await prisma.mUser.findFirst({
+    where: { ...query[itemType], deletedAt: null },
+  });
+};
+
+export const createUserWithRelation = async (item, email, hashedPassword, role, userUid) => {
+  const data = {
+    email,
     password: hashedPassword,
-    role: itemType,
+    role,
+    mustChangePassword: true,
     createdBy: userUid,
     updatedBy: userUid,
   };
 
-  if (itemType === "Atlet") {
-    userData.uidAtlet = data.uidAtlet; // pastikan ini ada
-  } else if (itemType === "Pelatih") {
-    userData.uidPelatih = data.uidPelatih; // pastikan ini ada
-  }
+  if (role === "Atlet") data.uidAtlet = item.uidAtlet;
+  else if (role === "Pelatih") data.uidPelatih = item.uidPelatih;
+  else if (role === "Official") data.uidOfficial = item.uidOfficial;
 
-  const addUser = await prisma.mUser.create({ data: userData });
-  return addUser;
-};
-
-export const findByEmail = async (email) => {
-  const findData = await prisma.mUser.findUnique({
-    where: {
-      email: email,
-    },
-  });
-
-  return findData;
-};
-
-export const ifUserExists = async (id) => {
-  const userExists = await prisma.mUser.findFirst({
-    where: {
-      uidAtlet: id,
-      deletedAt: null,
-    },
-  });
-
-  return userExists;
-};
-
-export const findItemType = async (data, itemType) => {
-  if (itemType === "Atlet") {
-    return prisma.mAtlet.findMany({ where: { uidAtlet: { in: data } } });
-  }
-  return prisma.mPelatih.findMany({ where: { uidPelatih: { in: data } } });
-};
-
-export const checkByUids = async (data, itemType) => {
-  return prisma.mUser.findMany({
-    where:
-      itemType === "Atlet"
-        ? { uidAtlet: { in: data } }
-        : { uidPelatih: { in: data } },
-  });
-};
-
-export const updateEmailStatus = async (data, itemType) => {
-  const updateStatus = await prisma.mUser.updateMany({
-    where:
-      itemType === "Atlet"
-        ? { uidAtlet: { in: data } }
-        : { uidPelatih: { in: data } },
-    data: {
-      hasEmailSent: true,
-      emailSentTime: new Date(),
-    },
-  });
-
-  return updateStatus;
+  return await prisma.mUser.create({ data });
 };

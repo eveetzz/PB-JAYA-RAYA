@@ -1,59 +1,37 @@
-import express from "express";
-import { addCoach, getAllCoaches } from "./coach.service.js";
-import {
-  authenticate,
-  authorize,
-  protect,
-} from "../../middlewares/auth.middleware.js";
-import { softDeleteCoach } from "./coach.repository.js";
-import { uploadMiddleware } from "../../utils/cloudinary.js";
+import { addCoach, getAllCoaches, softDeleteCoach } from "./coach.service.js";
 
-export const fetchCoachesController = async (req, res) => {
+export const fetchCoachesController = async (req, res, next) => {
   try {
     const data = await getAllCoaches();
-
-    res.send({ data: data, message: "Berhasil mengambil data pelatih" });
+    res.status(200).json({ status: true, message: "Berhasil mengambil data pelatih", data });
   } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Data tidak ditemukan", error: error.message });
+    next(error);
   }
 };
 
-export const addCoachController = async (req, res) => {
+export const addCoachController = async (req, res, next) => {
   try {
     const data = req.body;
-    const getFile = req.file.buffer;
-
-    if (!data.namaLengkap || !data.nik) {
-      return res
-        .status(400)
-        .json({ message: "mohon lengkapi data yang dibutuhkan" });
-    }
-
+    const files = req.files || {};
     const userUid = req.user.uidUser;
 
-    const result = await addCoach(data, userUid, getFile);
+    const result = await addCoach(data, userUid, files);
 
-    res.json({ data: result, message: "Berhasil menambahkan data pelatih" });
+    res.status(201).json({ status: true, message: "Berhasil menambahkan data pelatih", data: result });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "internal server error", error: error.message });
+    next(error);
   }
 };
 
-export const deleteCoachController = async (req, res) => {
+export const deleteCoachController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userUid = req.user.uidUser;
 
-    const result = await softDeleteCoach(id, userUid);
+    await softDeleteCoach(id, userUid);
 
-    res.status(200).json({ message: "Data berhasil dihapus" });
+    res.status(200).json({ status: true, message: "Data berhasil dihapus" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "internal server error", error: error.message });
+    next(error);
   }
 };

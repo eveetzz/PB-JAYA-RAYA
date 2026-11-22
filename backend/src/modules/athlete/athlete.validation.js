@@ -14,18 +14,9 @@ export const createAtletSchema = Joi.object({
     "string.max": "ID PBSI maksimal 20 karakter",
     "any.required": "ID PBSI wajib diisi",
   }),
-  email: Joi.string().email().max(50).required().messages({
-    "string.email": "Format email tidak valid",
-    "string.max": "Email maksimal 50 karakter",
-    "any.required": "Email wajib diisi",
-  }),
   namaLengkap: Joi.string().max(100).required().messages({
     "string.max": "Nama lengkap maksimal 100 karakter",
     "any.required": "Nama lengkap wajib diisi",
-  }),
-  namaAyah: Joi.string().max(100).required().messages({
-    "string.max": "Nama ayah maksimal 100 karakter",
-    "any.required": "Nama ayah wajib diisi",
   }),
   namaIbu: Joi.string().max(100).required().messages({
     "string.max": "Nama ibu maksimal 100 karakter",
@@ -56,33 +47,31 @@ export const createAtletSchema = Joi.object({
       "any.only": `Pegangan raket harus salah satu dari: ${pegangan_raket.join(", ")}`,
       "any.required": "Pegangan raket wajib diisi",
     }),
-  tinggiBadan: Joi.number().integer().min(50).max(250).required().messages({
-    "number.base": "Tinggi badan harus berupa angka",
-    "number.integer": "Tinggi badan harus bilangan bulat",
-    "number.min": "Tinggi badan minimal 50 cm",
-    "number.max": "Tinggi badan maksimal 250 cm",
-    "any.required": "Tinggi badan wajib diisi",
+  provinsi: Joi.string().max(100).required().messages({
+    "string.max": "Provinsi maksimal 100 karakter",
+    "any.required": "Provinsi wajib diisi",
   }),
-  beratBadan: Joi.number().integer().min(10).max(300).required().messages({
-    "number.base": "Berat badan harus berupa angka",
-    "number.integer": "Berat badan harus bilangan bulat",
-    "number.min": "Berat badan minimal 10 kg",
-    "number.max": "Berat badan maksimal 300 kg",
-    "any.required": "Berat badan wajib diisi",
+  klubSaatIni: Joi.string().max(100).required().messages({
+    "string.max": "Klub saat ini maksimal 100 karakter",
+    "any.required": "Klub saat ini wajib diisi",
+  }),
+  asalKlubSebelumnya: Joi.string().max(100).allow(null, "").optional().messages({
+    "string.max": "Asal klub sebelumnya maksimal 100 karakter",
+  }),
+  gabungSatelitPada: Joi.date().iso().allow(null, "").optional().messages({
+    "date.base": "Tanggal gabung satelit harus format tanggal (YYYY-MM-DD)",
+  }),
+  gabungJayaRayaPada: Joi.date().iso().allow(null, "").optional().messages({
+    "date.base": "Tanggal gabung Jaya Raya harus format tanggal (YYYY-MM-DD)",
   }),
   statusAtlet: Joi.string()
     .valid(...status_atlet)
-    .required()
+    .optional()
     .messages({
       "any.only": `Status atlet harus salah satu dari: ${status_atlet.join(", ")}`,
-      "any.required": "Status atlet wajib diisi",
     }),
   foto: Joi.string().max(255).allow(null, "").optional().messages({
     "string.max": "URL foto maksimal 255 karakter",
-  }),
-  uidProvinsi: Joi.string().max(10).required().messages({
-    "string.max": "UID Provinsi maksimal 10 karakter",
-    "any.required": "UID Provinsi wajib diisi",
   }),
 });
 
@@ -90,9 +79,7 @@ export const createAtletSchema = Joi.object({
 export const updateAtletSchema = Joi.object({
   nik: Joi.string().max(20).optional(),
   idPbsi: Joi.string().max(20).optional(),
-  email: Joi.string().email().max(50).optional(),
   namaLengkap: Joi.string().max(100).optional(),
-  namaAyah: Joi.string().max(100).optional(),
   namaIbu: Joi.string().max(100).optional(),
   tempatLahir: Joi.string().max(100).optional(),
   tanggalLahir: Joi.date().iso().optional(),
@@ -103,13 +90,15 @@ export const updateAtletSchema = Joi.object({
   peganganRaket: Joi.string()
     .valid(...pegangan_raket)
     .optional(),
-  tinggiBadan: Joi.number().integer().min(50).max(250).optional(),
-  beratBadan: Joi.number().integer().min(10).max(300).optional(),
+  provinsi: Joi.string().max(100).optional(),
+  klubSaatIni: Joi.string().max(100).optional(),
+  asalKlubSebelumnya: Joi.string().max(100).allow(null, "").optional(),
+  gabungSatelitPada: Joi.date().iso().allow(null, "").optional(),
+  gabungJayaRayaPada: Joi.date().iso().allow(null, "").optional(),
   statusAtlet: Joi.string()
     .valid(...status_atlet)
     .optional(),
   foto: Joi.string().max(255).allow(null, "").optional(),
-  uidProvinsi: Joi.string().max(10).optional(),
 })
   .min(1)
   .messages({

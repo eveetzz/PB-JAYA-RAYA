@@ -1,8 +1,8 @@
 import express from "express";
-import createError from "http-errors";
 import { login } from "./auth.service.js";
 import { COOKIE_MAX_AGE, NODE_ENV } from "../../config/env.js";
 import { findByUidUser } from "./auth.repository.js";
+import { appError } from "../../utils/errorHandler.js";
 
 export const loginController = async (req, res, next) => {
   try {
@@ -29,11 +29,11 @@ export const checkAuthController = async (req, res, next) => {
     const user = await findByUidUser(req.user.uidUser);
 
     if (!user) {
-      throw createError(401, "Sesi tidak valid");
+      throw appError("Sesi tidak valid", 401);
     }
 
     if (user.deletedAt) {
-      throw createError(403, "Akun telah dinonaktifkan");
+      throw appError("Akun telah dinonaktifkan", 403);
     }
 
     const { password, ...safeUser } = user;
@@ -47,7 +47,7 @@ export const checkAuthController = async (req, res, next) => {
   } 
 };
 
-export const logoutController = async (req, res) => {
+export const logoutController = async (req, res, next) => {
   try {
     const logoutCookieOptions = {
       ...cookieOptions,

@@ -1,24 +1,28 @@
 import { prisma } from "../../config/db.js";
 
-export const createAthlete = async (data, userUid, optimizedImgUrl) => {
+export const createAthlete = async (data, userUid, filePaths) => {
   const createData = await prisma.mAtlet.create({
     data: {
       nik: data.nik,
       idPbsi: data.idPbsi,
-      email: data.email,
       namaLengkap: data.namaLengkap,
-      namaAyah: data.namaAyah,
       namaIbu: data.namaIbu,
       tempatLahir: data.tempatLahir,
       tanggalLahir: new Date(data.tanggalLahir),
       alamat: data.alamat,
       jenisKelamin: data.jenisKelamin,
       peganganRaket: data.peganganRaket,
-      tinggiBadan: parseInt(data.tinggiBadan) || 0,
-      beratBadan: parseInt(data.beratBadan) || 0,
-      statusAtlet: data.statusAtlet,
-      foto: optimizedImgUrl,
-      uidProvinsi: data.uidProvinsi,
+      provinsi: data.provinsi,
+      klubSaatIni: data.klubSaatIni,
+      asalKlubSebelumnya: data.asalKlubSebelumnya,
+      gabungSatelitPada: data.gabungSatelitPada ? new Date(data.gabungSatelitPada) : null,
+      gabungJayaRayaPada: data.gabungJayaRayaPada ? new Date(data.gabungJayaRayaPada) : null,
+      statusAtlet: data.statusAtlet || "Aktif",
+      foto: filePaths.foto,
+      fileSttbSd: filePaths.fileSttbSd,
+      fileKk: filePaths.fileKk,
+      fileNisnOnline: filePaths.fileNisnOnline,
+      fileAkteKelahiran: filePaths.fileAkteKelahiran,
       createdBy: userUid,
       updatedBy: userUid,
     },
@@ -29,10 +33,6 @@ export const createAthlete = async (data, userUid, optimizedImgUrl) => {
 
 export const assignSektor = async (id, sektorList, userUid) => {
   const results = await prisma.$transaction(async (r) => {
-    // ==========================================
-    // FASE 1: TUTUP (Close)
-    // Menutup semua sektor yang saat ini "Aktif" (endDate = null)
-    // ==========================================
     await r.rAtletSektor.updateMany({
       where: {
         uidAtlet: id,
@@ -44,10 +44,7 @@ export const assignSektor = async (id, sektorList, userUid) => {
         updatedBy: userUid,
       },
     });
-    // ==========================================
-    // FASE 2: TUMPUK (Stack)
-    // Membuat record baru untuk sektor yang diminta frontend
-    // ==========================================
+
     if (sektorList.length > 0) {
       await r.rAtletSektor.createMany({
         data: sektorList.map((item) => ({
@@ -67,7 +64,7 @@ export const assignSektor = async (id, sektorList, userUid) => {
 };
 
 export const findByNik = async (nik) => {
-  const findData = await prisma.mAtlet.findUnique({
+  const findData = await prisma.mAtlet.findFirst({
     where: {
       nik: nik,
       deletedAt: null,
@@ -98,24 +95,51 @@ export const findByUid = async (id) => {
   return checkUser;
 };
 
-export const updateDataAthlete = async (id, user, updatedData) => {
+export const updateDataAthlete = async (id, user, updatedData, filePaths) => {
   const updatedAthlete = await prisma.mAtlet.update({
     where: { uidAtlet: id },
-    data: { ...updatedData, updatedAt: new Date(), updatedBy: user },
+    data: {
+      ...updatedData,
+      tanggalLahir: updatedData.tanggalLahir ? new Date(updatedData.tanggalLahir) : undefined,
+      gabungSatelitPada: updatedData.gabungSatelitPada ? new Date(updatedData.gabungSatelitPada) : undefined,
+      gabungJayaRayaPada: updatedData.gabungJayaRayaPada ? new Date(updatedData.gabungJayaRayaPada) : undefined,
+      foto: filePaths.foto,
+      fileSttbSd: filePaths.fileSttbSd,
+      fileKk: filePaths.fileKk,
+      fileNisnOnline: filePaths.fileNisnOnline,
+      fileAkteKelahiran: filePaths.fileAkteKelahiran,
+      updatedAt: new Date(),
+      updatedBy: user,
+    },
   });
 
   return updatedAthlete;
 };
 
 export const softDeleteUser = async (id, userUid) => {
-  const deleteUser = await prisma.mAtlet.update({
-    where: {
-      uidAtlet: id,
-    },
-    data: {
-      deletedBy: userUid,
-      deletedAt: new Date(),
-    },
+  const deleteUser = await prisma.$transaction(async (r) => {
+    const atlet = await r.mAtlet.update({
+      where: {
+        uidAtlet: id,
+      },
+      data: {
+        statusAtlet: "Nonaktif",
+        deletedBy: userUid,
+        deletedAt: new Date(),
+      },
+    });
+
+    await r.mUser.updateMany({
+      where: { uidAtlet: id },
+      data: {
+        statusAkun: "Nonaktif",
+        deletedBy: userUid,
+        deletedAt: new Date(),
+      },
+    });
+
+    return atlet;
   });
+
   return deleteUser;
 };
