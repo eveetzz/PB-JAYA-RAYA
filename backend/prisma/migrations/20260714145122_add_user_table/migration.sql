@@ -95,3 +95,33 @@ ALTER TABLE "MUser" ADD CONSTRAINT "MUser_uidAtlet_fkey" FOREIGN KEY ("uidAtlet"
 
 -- AddForeignKey
 ALTER TABLE "MUser" ADD CONSTRAINT "MUser_uidPelatih_fkey" FOREIGN KEY ("uidPelatih") REFERENCES "MPelatih"("uidPelatih") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Natural key aktif
+CREATE UNIQUE INDEX uq_muser_email_active
+ON "MUser" ("email")
+WHERE "deletedAt" IS NULL;
+
+CREATE UNIQUE INDEX uq_matlet_nik_active
+ON "MAtlet" ("nik")
+WHERE "deletedAt" IS NULL;
+
+CREATE UNIQUE INDEX uq_matlet_idpbsi_active
+ON "MAtlet" ("idPbsi")
+WHERE "deletedAt" IS NULL;
+
+CREATE UNIQUE INDEX uq_mpelatih_nik_active
+ON "MPelatih" ("nik")
+WHERE "deletedAt" IS NULL;
+
+CREATE UNIQUE INDEX uq_mofficial_nik_active
+ON "MOfficial" ("nik")
+WHERE "deletedAt" IS NULL;
+
+-- Assignment aktif: hanya satu yang endDate-nya null
+CREATE UNIQUE INDEX uq_rpelatihjenis_active
+ON "RPelatihJenis" ("uidPelatih", "jenisPelatih")
+WHERE "deletedAt" IS NULL AND "endDate" IS NULL;
+
+CREATE UNIQUE INDEX uq_rpelatihsektor_active
+ON "RPelatihSektor" ("uidPelatih", "uidSektor")
+WHERE "deletedAt" IS NULL AND "endDate" IS NULL;
