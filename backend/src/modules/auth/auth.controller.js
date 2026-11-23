@@ -32,8 +32,11 @@ export const checkAuthController = async (req, res, next) => {
       throw appError("Sesi tidak valid", 401);
     }
 
-    if (user.deletedAt) {
-      throw appError("Akun telah dinonaktifkan", 403);
+    if (user.deletedAt || user.statusAkun === "Nonaktif") {
+      // Hapus cookie agar sesi langsung berakhir di sisi browser.
+      res.clearCookie("token", { ...cookieOptions, maxAge: 0, expires: new Date(0) });
+      // 401 agar frontend otomatis kembali ke halaman login.
+      throw appError("Akun telah dinonaktifkan", 401);
     }
 
     const { password, ...safeUser } = user;

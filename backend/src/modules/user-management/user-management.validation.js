@@ -1,15 +1,15 @@
 import Joi from "joi";
 
 const role_user = ["Admin", "Manajemen", "Atlet", "Pelatih", "Official"];
+const status_akun = ["Aktif", "Nonaktif"];
 
 export const registerUserSchema = Joi.object({
   email: Joi.string().email().max(100).required().messages({
     "string.email": "Format email tidak valid",
     "any.required": "Email wajib diisi",
   }),
-  password: Joi.string().min(5).required().messages({
+  password: Joi.string().min(5).optional().messages({
     "string.min": "Password minimal 5 karakter",
-    "any.required": "Password wajib diisi",
   }),
   role: Joi.string()
     .valid(...role_user)
@@ -20,25 +20,38 @@ export const registerUserSchema = Joi.object({
     }),
 });
 
-export const addRolesSchema = Joi.object({
-  itemType: Joi.string().valid("Atlet", "Pelatih", "Official").required().messages({
-    "any.required": "Item type wajib diisi",
-    "any.only": "Item type harus Atlet, Pelatih, atau Official",
+export const updateEmailSchema = Joi.object({
+  email: Joi.string().email().max(100).required().messages({
+    "string.email": "Format email tidak valid",
+    "any.required": "Email wajib diisi",
   }),
-  payloadList: Joi.array()
-    .items(
-      Joi.object({
-        uid: Joi.string().required().messages({ "any.required": "UID wajib diisi" }),
-        email: Joi.string().email().required().messages({
-          "string.email": "Format email tidak valid",
-          "any.required": "Email wajib diisi",
-        }),
-      })
-    )
-    .min(1)
+});
+
+export const updateStatusSchema = Joi.object({
+  statusAkun: Joi.string()
+    .valid(...status_akun)
     .required()
     .messages({
-      "array.min": "Minimal harus ada 1 data dalam payload list",
-      "any.required": "Payload list wajib diisi",
+      "any.only": `Status akun harus salah satu dari: ${status_akun.join(", ")}`,
+      "any.required": "Status akun wajib diisi",
     }),
 });
+
+// Body untuk pembuatan akun dari data personil:
+// POST /user/add-roles?type=Atlet  body: [{ uid, email }]
+export const addRolesPayloadSchema = Joi.array()
+  .items(
+    Joi.object({
+      uid: Joi.string().required().messages({ "any.required": "UID wajib diisi" }),
+      email: Joi.string().email().required().messages({
+        "string.email": "Format email tidak valid",
+        "any.required": "Email wajib diisi",
+      }),
+    }),
+  )
+  .min(1)
+  .required()
+  .messages({
+    "array.min": "Minimal harus ada 1 data dalam payload list",
+    "any.required": "Payload list wajib diisi",
+  });

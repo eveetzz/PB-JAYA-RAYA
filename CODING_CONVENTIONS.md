@@ -50,7 +50,8 @@ Setiap modul di backend disusun secara terisolasi di bawah direktori `src/module
   updatedBy String   @db.VarChar(36)
   deletedBy String?  @db.VarChar(36)
   ```
-- **Soft Delete**: Operasi penghapusan data **TIDAK BOHLEH** menghapus baris secara permanen dari database (`DELETE`). Wajib memperbarui `deletedAt` dan `deletedBy`. Semua query pendaftaran/pembacaan wajib memfilter `deletedAt: null`.
+- **Soft Delete**: Operasi penghapusan data **TIDAK BOLEH** menghapus baris secara permanen dari database (`DELETE`). Wajib memperbarui `deletedAt` dan `deletedBy`. Semua query pendaftaran/pembacaan wajib memfilter `deletedAt: null`.
+  - **Pengecualian**: Query khusus halaman Manajemen User (`fetchUser`, `findByEmail`, `findByUidUser` pada `user-management.repository.js`) sengaja **tidak** memfilter `deletedAt`, karena akun Nonaktif harus tetap tampil agar dapat diaktifkan kembali, dan email akun Nonaktif tetap dianggap terpakai untuk mencegah duplikasi. Query otentikasi (`auth.repository.js`) juga tidak memfilter `deletedAt` agar login akun Nonaktif ditolak dengan pesan "Akun telah dinonaktifkan", bukan "Email atau Password salah".
 
 ---
 
@@ -90,3 +91,41 @@ Setiap modul di backend disusun secara terisolasi di bawah direktori `src/module
 - **Otorisasi Permission**: Panggil `protect("permission:key")` sesuai pemetaan di `src/middlewares/permissions.js`.
 - **Distribusi Kredensial**: Tidak menggunakan layanan pengiriman email otomatis (Resend/Brevo). Response API aktivasi akun akan mengembalikan kredensial sementara untuk diblast secara manual oleh admin.
 - **Status Sinkron**: Jika entitas master dinonaktifkan (`statusAtlet` / `statusPelatih` / `statusOfficial` = "Nonaktif"), akun `MUser` terkait wajib otomatis dinonaktifkan (`statusAkun` = "Nonaktif").
+- **Soft Delete Akun**: Menonaktifkan akun dari Manajemen User mengisi `MUser.deletedAt` + `deletedBy`; mengaktifkan kembali mengosongkan keduanya. Menonaktifkan akun hanya mencabut akses login — status master (`statusAtlet` / `statusPelatih` / `statusOfficial`) tidak diubah.
+- **Pemutusan Sesi**: `/auth/me` mengembalikan `401` dan menghapus cookie bila akun Nonaktif / ter-soft-delete, sehingga sesi aktif langsung berakhir.
+
+---
+
+## 7. Frontend Standards (React + Vite)
+
+### Arsitektur: Feature-Based (Domain-Driven)
+- **`src/features/<fitur>/`**: Satu folder per domain bisnis (`auth`, `user-management`, dst), berisi `api/`, `components/`, dan `pages/`. Fitur baru wajib mengikuti pola ini, bukan menaruh semua komponen di folder global.
+- **`src/components/common/`**: Hanya komponen UI reusable tanpa logika bisnis (`Badge`, `Modal`, `Pagination`, `SearchInput`, `Sidebar`).
+- **`src/layouts/`**: Shell aplikasi (`AdminLayout`) yang membungkus sidebar, header mobile, dan konten.
+- **`src/context/`**: State global (`AuthContext`).
+- **`src/constants/`**: Data statis (`role.js`, `navigation.js`).
+- **`src/routes/`**: Guard route (`ProtectedRoute`).
+- **`src/services/api.js`**: Instance Axios tunggal.
+
+### Penamaan Frontend
+- **Komponen**: `PascalCase` (`UserSummaryCards.jsx`).
+- **File API/konstanta**: `kebab-case` (`user-management.api.js`, `navigation.js`).
+- **Hook & fungsi**: `camelCase` (`useAuth`, `handleSubmit`).
+- **Handler event**: Prefix `handle` (`handleSaveEmail`).
+
+### Autentikasi & Otorisasi
+- **Cookie-Based**: JWT berada di HttpOnly Cookie. **Dilarang** menyimpan token di `localStorage` / `sessionStorage`. Axios wajib `withCredentials: true`.
+- **Interceptor**: Error `401` memicu redirect ke `/login` (kecuali sedang di `/login`).
+- **RBAC Dua Lapis**: Menu disembunyikan via `roles` di `navigation.js`, dan route dijaga `ProtectedRoute` berdasarkan `allowedRoles`.
+- **Redirect Default**: `/` mengarah ke `/dashboard`. Tanpa sesi valid, `ProtectedRoute` melempar ke `/login`.
+
+### Standar UI/UX
+- **Mobile-First**: Class dasar untuk layar kecil, breakpoint `md:` / `lg:` untuk naik ke tablet/desktop.
+- **Sidebar**: Drawer overlay di mobile, sticky `w-[244px]` di desktop.
+- **Tabel**: Multi-kolom di desktop, berubah menjadi susunan kartu vertikal di mobile.
+- **Aksesibilitas**: Target sentuh minimal 44px dan font input minimal 16px (mencegah auto-zoom iOS).
+
+### Pengambilan Data
+- **Server-Side**: Pencarian, filter, dan pagination dikirim sebagai query params; frontend tidak memfilter dataset besar di memori.
+- **Kontrak Response**: `{ status, message, data, meta, summary }`.
+- **Lapisan Pemanggilan**: Komponen tidak memanggil Axios langsung; gunakan modul `api/` milik fitur.

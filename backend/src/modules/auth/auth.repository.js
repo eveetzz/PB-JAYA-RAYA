@@ -1,10 +1,11 @@
 import { prisma } from "../../config/db.js";
 
 export const findByEmailUser = async (email) => {
+  // Tanpa filter deletedAt agar akun Nonaktif (soft delete) dapat dikenali
+  // dan login menolak dengan pesan "Akun telah dinonaktifkan".
   return await prisma.mUser.findFirst({
     where: {
       email: email,
-      deletedAt: null,
     },
     include: {
       atlet: true,

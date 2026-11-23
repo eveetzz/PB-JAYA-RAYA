@@ -1,7 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        // Backend kamu tidak pakai prefix /api di server.js (misal: /auth/login)
+        // Jadi kita buang /api saat mengirim ke backend
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })

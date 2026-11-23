@@ -1,12 +1,50 @@
 import { prisma } from "../../config/db.js";
 
 export const fetchUser = async () => {
+  // Tidak memfilter deletedAt agar akun yang di-soft-delete (Nonaktif)
+  // tetap tampil di Manajemen User dan bisa diaktifkan kembali.
   return await prisma.mUser.findMany({
-    where: { deletedAt: null },
     include: {
       atlet: true,
       pelatih: true,
       official: true,
+    },
+  });
+};
+
+// Ambil seluruh personil master (untuk menggabungkan data yang belum punya akun)
+export const fetchMasterAtlet = async () => {
+  return await prisma.mAtlet.findMany({
+    where: { deletedAt: null },
+    select: {
+      uidAtlet: true,
+      nik: true,
+      namaLengkap: true,
+      statusAtlet: true,
+    },
+  });
+};
+
+export const fetchMasterPelatih = async () => {
+  return await prisma.mPelatih.findMany({
+    where: { deletedAt: null },
+    select: {
+      uidPelatih: true,
+      nik: true,
+      namaLengkap: true,
+      statusPelatih: true,
+    },
+  });
+};
+
+export const fetchMasterOfficial = async () => {
+  return await prisma.mOfficial.findMany({
+    where: { deletedAt: null },
+    select: {
+      uidOfficial: true,
+      nik: true,
+      namaLengkap: true,
+      statusOfficial: true,
     },
   });
 };
@@ -25,8 +63,39 @@ export const createUser = async (data, hashedPassword) => {
 };
 
 export const findByEmail = async (email) => {
+  // Tanpa filter deletedAt: email milik akun soft-delete tetap dianggap terpakai
+  // agar tidak terjadi duplikasi. Aktifkan kembali akun lama bila perlu.
   return await prisma.mUser.findFirst({
-    where: { email, deletedAt: null },
+    where: { email },
+  });
+};
+
+export const findByUidUser = async (uidUser) => {
+  // Tanpa filter deletedAt supaya akun Nonaktif masih bisa ditemukan & diaktifkan.
+  return await prisma.mUser.findUnique({
+    where: { uidUser },
+  });
+};
+
+export const updateEmail = async (uidUser, email, updatedBy) => {
+  return await prisma.mUser.update({
+    where: { uidUser },
+    data: { email, updatedBy },
+  });
+};
+
+export const updateStatus = async (uidUser, statusAkun, updatedBy) => {
+  const isNonaktif = statusAkun === "Nonaktif";
+
+  return await prisma.mUser.update({
+    where: { uidUser },
+    data: {
+      statusAkun,
+      updatedBy,
+      // Soft delete: Nonaktif mengisi deletedAt, Aktif mengosongkannya kembali.
+      deletedAt: isNonaktif ? new Date() : null,
+      deletedBy: isNonaktif ? updatedBy : null,
+    },
   });
 };
 
