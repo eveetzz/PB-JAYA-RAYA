@@ -2,12 +2,19 @@ import { appError } from "../../utils/errorHandler.js";
 import {
   assignSektor,
   createAthlete,
+  createManyAthletes,
+  findManyByNik,
   findByNik,
   findByUid,
   getAthletes,
   softDeleteUser,
   updateDataAthlete,
 } from "./athlete.repository.js";
+import {
+  parseAthleteWorkbook,
+  validateImportRows,
+  generateAthleteTemplate,
+} from "./athlete.importer.js";
 
 export const addAthlete = async (data, userUid, files) => {
   const isExists = await findByNik(data.nik);
@@ -27,12 +34,96 @@ export const addAthlete = async (data, userUid, files) => {
   return dataAthlete;
 };
 
-export const fetchDataAthlete = async () => {
-  const data = await getAthletes();
+export const fetchDataAthlete = async (query) => {
+  const data = await getAthletes(query);
+  return data;
+};
+
+export const fetchAthleteById = async (id) => {
+  const data = await findByUid(id);
   if (!data) {
-    throw appError("Data tidak ditemukan", 404);
+    throw appError("Data atlet tidak ditemukan", 404);
   }
   return data;
+};
+
+// Import Excel: dry-run validasi saja, atau commit bila dryRun=false
+export const importExcelAthletes = async (file, userUid, { dryRun }) => {
+  if (!file) {
+    throw appError("File Excel wajib diunggah", 400);
+  }
+
+  let parsed;
+  try {
+    parsed = await parseAthleteWorkbook(file.buffer);
+  } catch {
+    throw appError(
+      "File tidak dapat dibaca. Pastikan format .xlsx dan gunakan template yang disediakan",
+      400,
+    );
+  }
+
+  if (parsed.missingColumns?.length) {
+    throw appError(
+      `Kolom wajib tidak ditemukan: ${parsed.missingColumns.join(", ")}`,
+      400,
+    );
+  }
+
+  const { valid, errors } = validateImportRows(parsed.rows);
+
+  // cek duplikat NIK yang sudah ada di database
+  if (valid.length) {
+    const existing = await findManyByNik(valid.map((v) => v.data.nik));
+    const existingNik = new Set(existing.map((e) => e.nik));
+    valid.forEach((v) => {
+      if (existingNik.has(v.data.nik)) {
+        errors.push({
+          row: v.row,
+          field: "nik",
+          message: "NIK sudah terdaftar di database",
+          value: v.data.nik,
+        });
+      }
+    });
+  }
+
+  const invalidRows = new Set(errors.map((e) => e.row));
+  const validRows = valid.filter((v) => !invalidRows.has(v.row));
+
+  const result = {
+    dryRun: Boolean(dryRun),
+    totalRows: parsed.rows.length,
+    validRows: validRows.length,
+    invalidRows: errors.length,
+    errors,
+  };
+
+  if (dryRun) {
+    return result;
+  }
+
+  if (errors.length) {
+    throw appError(
+      "Import dibatalkan: masih terdapat baris yang tidak valid. Perbaiki file lalu cek ulang",
+      422,
+    );
+  }
+
+  if (!validRows.length) {
+    throw appError("Tidak ada baris untuk diimport", 400);
+  }
+
+  const created = await createManyAthletes(
+    validRows.map((v) => v.data),
+    userUid,
+  );
+
+  return { ...result, created: created.length };
+};
+
+export const downloadImportTemplate = async () => {
+  return generateAthleteTemplate();
 };
 
 export const editDataAthlete = async (id, user, data, files) => {

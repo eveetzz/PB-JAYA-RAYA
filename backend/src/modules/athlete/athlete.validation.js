@@ -3,7 +3,8 @@ import Joi from "joi";
 // enum
 const jenis_kelamin = ["L", "P"];
 const pegangan_raket = ["Kanan", "Kiri"];
-const status_atlet = ["Aktif", "Cedera", "Pensiun", "Pelatnas"];
+// sinkron dengan enum StatusAktivitas di schema Prisma
+const status_atlet = ["Aktif", "Nonaktif"];
 
 export const createAtletSchema = Joi.object({
   nik: Joi.string().max(20).required().messages({

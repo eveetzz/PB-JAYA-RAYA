@@ -1,6 +1,13 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Pagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange }) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  itemLabel = "Item",
+}) {
   const start = (currentPage - 1) * itemsPerPage + 1;
   const end = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -9,7 +16,7 @@ export default function Pagination({ currentPage, totalPages, totalItems, itemsP
   return (
     <div className="flex items-center justify-between bg-surface p-4 border-t border-line rounded-b-lg">
       <span className="text-sm text-muted">
-        Menampilkan {start}-{end} dari {totalItems} User
+        Menampilkan {start}-{end} dari {totalItems} {itemLabel}
       </span>
 
       <div className="flex items-center gap-1">

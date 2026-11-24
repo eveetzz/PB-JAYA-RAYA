@@ -1,8 +1,11 @@
 import {
   addAthlete,
   assignSektorAthlete,
+  downloadImportTemplate,
   editDataAthlete,
+  fetchAthleteById,
   fetchDataAthlete,
+  importExcelAthletes,
   softDeleteAthlete,
 } from "./athlete.service.js";
 import { appError } from "../../utils/errorHandler.js";
@@ -30,7 +33,7 @@ export const addAthleteController = async (req, res, next) => {
 
 export const fetchAthletesController = async (req, res, next) => {
   try {
-    const data = await fetchDataAthlete();
+    const data = await fetchDataAthlete(req.query);
 
     return successResponse(
       res,
@@ -38,6 +41,61 @@ export const fetchAthletesController = async (req, res, next) => {
       "Berhasil mengambil data atlet",
       HTTP_STATUS.OK,
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const fetchAthleteByIdController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = await fetchAthleteById(id);
+
+    return successResponse(
+      res,
+      data,
+      "Berhasil mengambil detail atlet",
+      HTTP_STATUS.OK,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const importExcelAthleteController = async (req, res, next) => {
+  try {
+    const userUid = req.user.uidUser;
+    const dryRun = String(req.body?.dryRun ?? req.query?.dryRun) !== "false";
+
+    const result = await importExcelAthletes(req.file, userUid, { dryRun });
+
+    return successResponse(
+      res,
+      result,
+      dryRun
+        ? "Cek data selesai"
+        : `Berhasil mengimport ${result.created} data atlet`,
+      HTTP_STATUS.OK,
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadImportTemplateController = async (req, res, next) => {
+  try {
+    const buffer = await downloadImportTemplate();
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="template-import-atlet.xlsx"',
+    );
+
+    return res.send(buffer);
   } catch (error) {
     next(error);
   }
