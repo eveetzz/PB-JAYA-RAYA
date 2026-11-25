@@ -66,7 +66,7 @@ export default function LoginForm() {
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder="Masukkan password"
             required
             className="w-full bg-transparent px-4 py-2.5 text-base text-ink placeholder:text-[#926f6a] focus:outline-none"
           />

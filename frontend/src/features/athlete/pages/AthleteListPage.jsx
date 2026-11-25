@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import SearchInput from "../../../components/common/SearchInput";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
@@ -98,6 +98,14 @@ export default function AthleteListPage() {
 
   const hasMore = meta.page < meta.totalPages;
 
+  // Role Atlet: menu "Data Atlet" langsung menampilkan profil mereka sendiri,
+  // bukan daftar semua atlet. Redirect dilakukan setelah semua hooks.
+  const isRoleAtlet = role === ROLES.ATLET;
+  const atletSelfUid = isRoleAtlet ? user?.uidAtlet : undefined;
+  if (isRoleAtlet && atletSelfUid) {
+    return <Navigate to={`/atlet/${atletSelfUid}`} replace />;
+  }
+
   const handleLoadMore = () => setPage((current) => current + 1);
 
   const handleDeleteRequest = (athlete) => {
@@ -173,30 +181,36 @@ export default function AthleteListPage() {
       )}
 
       {/* Toolbar: pencarian + tambah */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex-1">
-          <SearchInput
-            placeholder="CARI NAMA ATAU ID ATLET..."
-            value={searchInput}
-            onChange={setSearchInput}
-          />
-        </div>
+      {!isRoleAtlet && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1">
+            <SearchInput
+              placeholder="CARI NAMA ATAU ID ATLET..."
+              value={searchInput}
+              onChange={setSearchInput}
+            />
+          </div>
 
-        {canEdit && (
-          <button
-            type="button"
-            onClick={() => setChoiceOpen(true)}
-            className="flex items-center justify-center gap-2 h-12 px-6 bg-brand hover:bg-brand-dark text-white rounded font-semibold text-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Tambah Atlet
-          </button>
-        )}
-      </div>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setChoiceOpen(true)}
+              className="flex items-center justify-center gap-2 h-12 px-6 bg-brand hover:bg-brand-dark text-white rounded font-semibold text-sm transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Atlet
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Daftar atlet */}
       <div className="flex flex-col gap-4">
-        {loading ? (
+        {isRoleAtlet ? (
+          <div className="py-16 text-center text-sm text-muted bg-white rounded-lg border border-line">
+            Akun ini belum terhubung dengan data atlet. Hubungi administrator.
+          </div>
+        ) : loading ? (
           <div className="flex items-center justify-center gap-2 py-16 text-muted bg-white rounded-lg border border-line">
             <Loader2 className="w-5 h-5 animate-spin" />
             Memuat data atlet...

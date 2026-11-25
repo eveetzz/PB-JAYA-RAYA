@@ -34,12 +34,31 @@ export const addAthlete = async (data, userUid, files) => {
   return dataAthlete;
 };
 
-export const fetchDataAthlete = async (query) => {
+export const fetchDataAthlete = async (query, user) => {
+  // Role Atlet hanya melihat datanya sendiri. Bila akun belum memiliki
+  // uidAtlet (belum terhubung), kembalikan daftar kosong — jangan bocorkan
+  // atlet lain.
+  if (user.role === "Atlet") {
+    if (!user.uidAtlet) {
+      const { page = 1, limit = 20 } = query;
+      return {
+        data: [],
+        meta: { totalItems: 0, page: page, limit: limit, totalPages: 1 },
+        summary: { total: 0, aktif: 0, incomplete: 0 },
+      };
+    }
+    return getAthletes(query, user.uidAtlet);
+  }
+
   const data = await getAthletes(query);
   return data;
 };
 
-export const fetchAthleteById = async (id) => {
+export const fetchAthleteById = async (id, user) => {
+  if (user.role === "Atlet" && id !== user.uidAtlet) {
+    throw appError("Hak akses tidak tersedia untuk role ini", 403);
+  }
+
   const data = await findByUid(id);
   if (!data) {
     throw appError("Data atlet tidak ditemukan", 404);

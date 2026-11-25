@@ -17,7 +17,12 @@ export default function AthleteDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const canManage = user?.role === 'Admin';
+  const role = user?.role;
+  const canManage =
+    role === 'Admin' || role === 'Manajemen';
+  // Role Atlet hanya melihat profil sendiri; "Kembali" diarahkan ke dashboard
+  // agar tidak masuk loop: list -> redirect detail -> list.
+  const backPath = role === 'Atlet' ? '/dashboard' : '/atlet';
 
   const [athlete, setAthlete] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +69,7 @@ export default function AthleteDetailPage() {
         </div>
         <button
           type="button"
-          onClick={() => navigate('/atlet')}
+          onClick={() => navigate(backPath)}
           className="mt-4 flex items-center gap-1 text-brand font-semibold text-sm hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -89,7 +94,7 @@ export default function AthleteDetailPage() {
       <div className="flex flex-col gap-4">
         <button
           type="button"
-          onClick={() => navigate('/atlet')}
+          onClick={() => navigate(backPath)}
           className="flex items-center gap-1 self-start text-brand font-semibold text-sm hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />

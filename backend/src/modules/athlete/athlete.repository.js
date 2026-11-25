@@ -137,8 +137,12 @@ const FILE_FIELDS = [
   "fileAkteKelahiran",
 ];
 
-const buildWhere = ({ search, status }) => {
+const buildWhere = ({ search, status }, uidAtlet) => {
   const and = [{ deletedAt: null }];
+
+  if (uidAtlet) {
+    and.push({ uidAtlet });
+  }
 
   if (search) {
     and.push({
@@ -156,7 +160,7 @@ const buildWhere = ({ search, status }) => {
   return { AND: and };
 };
 
-export const getAthletes = async (query = {}) => {
+export const getAthletes = async (query = {}, uidAtlet) => {
   const {
     search,
     status,
@@ -171,7 +175,7 @@ export const getAthletes = async (query = {}) => {
   const orderField = SORTABLE_FIELDS.includes(sortBy) ? sortBy : "createdAt";
   const orderDir = sortOrder === "asc" ? "asc" : "desc";
 
-  const where = buildWhere({ search, status });
+  const where = buildWhere({ search, status }, uidAtlet);
 
   const [totalItems, totalAtlet, aktifCount, incompleteCount, data] =
     await Promise.all([

@@ -59,6 +59,8 @@ Membangun antarmuka dan API input data atlet dengan dua jalur: **input manual** 
 - `/atlet`, `/atlet/:id` dapat diakses semua role login.
 - `/atlet/tambah`, `/atlet/:id/edit` dijaga `ProtectedRoute allowedRoles={['Admin', 'Manajemen']}`.
 - Tombol aksi kelola (tambah/edit) disembunyikan untuk role di luar Admin/Manajemen; delete hanya Admin.
+- **Role Atlet**: menu "Data Atlet" langsung arahkan ke detail profil sendiri (`/atlet/{uidAtlet}`), bukan daftar semua atlet. Akun Atlet yang belum memiliki `uidAtlet` melihat panel "Akun belum terhubung dengan data atlet" (toolbar & tabel disembunyikan). Tombol "Kembali" di halaman detail mengarah ke `/dashboard` agar tidak terjadi loop redirect.
+- **Sidebar active state**: menu aktif tidak lagi memakai exact match, tapi juga cocok untuk sub-route (`/atlet/:id`, `/atlet/tambah`). Untuk role Atlet, target menu "Data Atlet" langsung `/atlet/{uidAtlet}` sehingga klik tidak terasa mati (tidak memicu redirect balik ke halaman yang sama).
 
 ---
 
@@ -76,3 +78,4 @@ Membangun antarmuka dan API input data atlet dengan dua jalur: **input manual** 
 11. **RBAC frontend mencerminkan backend**: tambah/edit = Admin + Manajemen (`admin:athlete:manage`), delete = Admin saja (`admin:athlete:delete`). Route guard disamakan agar tidak muncul tombol yang berujung 403.
 12. **Hapus data memakai `ConfirmDialog`** di `components/common/` supaya dialog konfirmasi dapat dipakai ulang lintas modul.
 13. **Layout form/preview disatukan** lewat `AthleteProfileSummary`, sehingga tampilan Preview dan halaman detail tidak bisa menyimpang.
+14. **Role Atlet = self-service data**: menu "Data Atlet" menampilkan profil atlet yang login. Pengaman dobel — backend memfilter `GET /athlete` hanya ke `uidAtlet` miliknya, `GET /athlete/:id` menolak id orang lain dengan 403, dan frontend redirect `/atlet` → `/atlet/{uidAtlet}`. Akun Atlet tanpa `uidAtlet` mendapat daftar kosong (bukan semua atlet) untuk mencegah kebocoran data.

@@ -33,7 +33,7 @@ export const addAthleteController = async (req, res, next) => {
 
 export const fetchAthletesController = async (req, res, next) => {
   try {
-    const data = await fetchDataAthlete(req.query);
+    const data = await fetchDataAthlete(req.query, req.user);
 
     return successResponse(
       res,
@@ -49,7 +49,7 @@ export const fetchAthletesController = async (req, res, next) => {
 export const fetchAthleteByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const data = await fetchAthleteById(id);
+    const data = await fetchAthleteById(id, req.user);
 
     return successResponse(
       res,
