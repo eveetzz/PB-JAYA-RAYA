@@ -8,6 +8,8 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import athleteRoutes from "./modules/athlete/athlete.routes.js";
 import coachRoutes from "./modules/coach/coach.routes.js";
 import officialRoutes from "./modules/official/official.routes.js";
+import pelatihOfficialRoutes from "./modules/pelatih-official/pelatih-official.routes.js";
+import sektorRoutes from "./modules/sektor/sektor.routes.js";
 import userRoutes from "./modules/user-management/user-management.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
@@ -37,6 +39,8 @@ app.use("/auth", authRoutes);
 app.use("/athlete", athleteRoutes);
 app.use("/coach", coachRoutes);
 app.use("/official", officialRoutes);
+app.use("/pelatih-official", pelatihOfficialRoutes);
+app.use("/sektor", sektorRoutes);
 
 // error handler
 app.use(errorHandler);

@@ -8,6 +8,7 @@ import ManualUserModal from "../components/ManualUserModal";
 import SearchInput from "../../../components/common/SearchInput";
 import Pagination from "../../../components/common/Pagination";
 import { userManagementApi } from "../api/user-management.api";
+import { ROLES } from "../../../constants/role";
 
 const TABS = [
   { key: "semua", label: "Semua User" },
@@ -36,7 +37,7 @@ export default function UserManagementPage() {
   const [error, setError] = useState("");
 
   const [activeTab, setActiveTab] = useState("semua");
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(ROLES.ATLET);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);

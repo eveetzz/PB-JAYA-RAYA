@@ -8,6 +8,11 @@ import UserManagementPage from './features/user-management/pages/UserManagementP
 import AthleteListPage from './features/athlete/pages/AthleteListPage';
 import AthleteFormPage from './features/athlete/pages/AthleteFormPage';
 import AthleteDetailPage from './features/athlete/pages/AthleteDetailPage';
+import CoachOfficialListPage from './features/coach-official/pages/CoachOfficialListPage';
+import CoachFormPage from './features/coach-official/pages/CoachFormPage';
+import CoachDetailPage from './features/coach-official/pages/CoachDetailPage';
+import OfficialFormPage from './features/coach-official/pages/OfficialFormPage';
+import OfficialDetailPage from './features/coach-official/pages/OfficialDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -42,6 +47,47 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'Manajemen']}>
                   <AthleteFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pelatih-official"
+              element={<CoachOfficialListPage />}
+            />
+            <Route
+              path="/pelatih-official/tambah/pelatih"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'Manajemen']}>
+                  <CoachFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pelatih-official/tambah/official"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'Manajemen']}>
+                  <OfficialFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/pelatih-official/pelatih/:id" element={<CoachDetailPage />} />
+            <Route
+              path="/pelatih-official/pelatih/:id/edit"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'Manajemen']}>
+                  <CoachFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pelatih-official/official/:id"
+              element={<OfficialDetailPage />}
+            />
+            <Route
+              path="/pelatih-official/official/:id/edit"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'Manajemen']}>
+                  <OfficialFormPage />
                 </ProtectedRoute>
               }
             />

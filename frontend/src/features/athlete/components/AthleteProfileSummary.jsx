@@ -203,10 +203,10 @@ export default function AthleteProfileSummary({ athlete, getFile }) {
             <table className="w-full text-sm">
               <thead className="bg-surface">
                 <tr>
-                  <th className="px-4 py-2.5 text-left font-bold text-[11px] text-muted uppercase">
+                  <th className="px-4 py-4 text-left font-bold text-[11px] text-muted uppercase">
                     Nama Dokumen
                   </th>
-                  <th className="px-4 py-2.5 text-center font-bold text-[11px] text-muted uppercase w-28">
+                  <th className="px-4 py-4 text-center font-bold text-[11px] text-muted uppercase w-28">
                     File
                   </th>
                 </tr>
@@ -216,7 +216,7 @@ export default function AthleteProfileSummary({ athlete, getFile }) {
                   const file = getFile(doc.field);
                   return (
                     <tr key={doc.field} className="border-t border-line">
-                      <td className="px-4 py-2.5 text-ink font-medium">
+                      <td className="px-4 py-4 text-ink font-medium">
                         {doc.label}
                       </td>
                       <td className="px-4 py-2.5">

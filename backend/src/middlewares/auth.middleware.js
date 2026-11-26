@@ -24,6 +24,7 @@ export const authenticate = (req, res, next) => {
       role: decoded.role,
       uidAtlet: decoded.uidAtlet,
       uidPelatih: decoded.uidPelatih,
+      uidOfficial: decoded.uidOfficial,
       permissions: decoded.permissions,
     };
 

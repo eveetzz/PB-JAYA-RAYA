@@ -46,18 +46,41 @@ export default function Sidebar({ open, onClose }) {
   const location = useLocation();
   const role = user?.role;
 
-  // Role Atlet: menu "Data Atlet" langsung menuju detail profilnya sendiri,
-  // bukan halaman daftar yang akan redirect balik (terasa seperti klik mati).
-  const resolveItemPath = (item) => {
+  // Role Atlet/Pelatih/Official: modul data diri memakai label "Informasi Saya"
+  // dan langsung menuju profil mereka sendiri, bukan halaman daftar.
+  const resolveItem = (item) => {
     if (item.path === "/atlet" && role === ROLES.ATLET && user?.uidAtlet) {
-      return `/atlet/${user.uidAtlet}`;
+      return { label: "Informasi Saya", path: `/atlet/${user.uidAtlet}` };
     }
-    return item.path;
+
+    if (
+      item.path === "/pelatih-official" &&
+      role === ROLES.PELATIH &&
+      user?.uidPelatih
+    ) {
+      return {
+        label: "Informasi Saya",
+        path: `/pelatih-official/pelatih/${user.uidPelatih}`,
+      };
+    }
+
+    if (
+      item.path === "/pelatih-official" &&
+      role === ROLES.OFFICIAL &&
+      user?.uidOfficial
+    ) {
+      return {
+        label: "Informasi Saya",
+        path: `/pelatih-official/official/${user.uidOfficial}`,
+      };
+    }
+
+    return { label: item.label, path: item.path };
   };
 
   const renderItem = (item) => {
     if (!item.roles.includes(role)) return null;
-    const target = resolveItemPath(item);
+    const { label, path: target } = resolveItem(item);
     // Active juga saat berada di sub-route (mis. /atlet/:id, /atlet/tambah).
     const isActive =
       location.pathname === target ||
@@ -75,7 +98,7 @@ export default function Sidebar({ open, onClose }) {
         }`}
       >
         {getNavIcon(item.icon)}
-        <span className="text-sm leading-4">{item.label}</span>
+        <span className="text-sm leading-4">{label}</span>
       </NavLink>
     );
   };
