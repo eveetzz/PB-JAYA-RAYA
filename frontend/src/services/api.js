@@ -1,9 +1,11 @@
+
 import axios from 'axios';
 
-// Backend menggunakan cookie-based auth (httpOnly cookie),
-// jadi withCredentials WAJIB true agar cookie token terkirim otomatis.
+// URL backend dari environment variable Vercel
+const API_URL = import.meta.env.VITE_API_URL;
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -15,7 +17,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Hindari loop redirect jika sudah di halaman login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
